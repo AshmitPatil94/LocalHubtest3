@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LocalHub</title>
+<style>
+/* Existing CSS (No changes needed here for the functionality) */
+#detail-price,
+#detail-description,
+#detail-provider {
+  color: white !important;
+}
+/* ===== Sidebar Styles ===== */
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 100%;
+  background-color: #333;
+  color: white;
+  padding-top: 50px;
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+#sidebar button {
+  display: block;
+  width: 90%;
+  margin: 10px auto;
+  padding: 12px;
+  background: #444;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  font-size: 16px;
+}
+#sidebar button:hover {
+  background: #4CAF50;
+}  /* Sidebar toggle button for mobile */
+#sidebarToggle {
+display: none;
+position: fixed;
+top: 15px;
+left: 15px;
+z-index: 1100;
+background: #4CAF50;
+border: none;
+padding: 10px 12px;
+border-radius: 6px;
+color: white;
+cursor: pointer;
+font-size: 18px;
+}
+
+/* ===== Main Content ===== */
+#mainContent {
+  margin-left: 220px;
+  transition: margin-left 0.3s ease;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: transparent; /* ✅ Allows image to show */
+  min-height: 100vh;
+}
+
+/* ===== Sections ===== */
+h1,h2,li,b {color:#FFFFFF}
+input[type="text"], input[type="email"], input[type="password"] {
+width: 90%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+button.mainBtn {margin:10px;padding:12px 25px;font-size:16px;cursor:pointer;border-radius:10px;background-color:#4CAF50;color:white;border:none;}
+button.mainBtn:hover {background-color:#0056b3;}
+.product-grid {display:flex;justify-content:center;flex-wrap:wrap;gap:30px;margin-top:30px;}
+.product-card {background:white;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.1);width:250px;padding:20px;text-align:center;transition:transform 0.2s;cursor:pointer;}
+.product-card:hover {transform:scale(1.05);}
+.product-card img {width:200px;height:200px;object-fit:cover;border-radius:10px;}
+.product-name {font-size:18px;margin:10px 0;color:#333;}
+.product-price {font-size:16px;color:#4CAF50;font-weight:bold;}
+.back-button {margin-top:30px;padding:10px 20px;font-size:16px;cursor:pointer;border-radius:10px;background-color:#555;color:white;border:none;}
+.back-button:hover {background-color:#333;}
+.section {display:none;}
+.product-detail img {width:300px;height:300px;object-fit:cover;border-radius:15px;margin-bottom:20px;}
+.reviews {background-color:#f1f1f1;padding:15px;border-radius:10px;margin-top:15px;text-align:left;}
+.reviews h3 {margin-top:0;}
+.stars {display:inline-block;font-size:24px;position:relative;unicode-bidi:bidi-override;color:#ccc;}
+.stars::before {content:"\2605\2605\2605\2605\2605";} /* gray */
+.stars-inner {color:#FFD700;position:absolute;top:0;left:0;overflow:hidden;white-space:nowrap;}
+.stars-inner::before {content:"\2605\2605\2605\2605\2605";} /* yellow */
+
+/* ===== Pre-login Modal ===== */
+#preLoginModal {display:block;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.6);}
+#modalContent {background-color:#fff;margin:15% auto;padding:30px;border-radius:15px;width:90%;max-width:400px;text-align:center;}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+#sidebar {transform: translateX(-100%);}
+#sidebar.active {transform: translateX(0);}
+#mainContent {margin-left:0;}
+#sidebarToggle {display: block;}
+}
+
+/* ===== 🌙 Added: Dark Mode Styles ===== */
+body.dark-mode {
+  background-image: none; /* remove image in dark mode OR change if you want */
+  background-color: #121212;
+  color: #eee;
+}
+body.dark-mode #mainContent {
+background-color: #181818;
+color: #eee;
+}
+body.dark-mode #sidebar {
+background-color: #111;
+}
+body.dark-mode #sidebar button {
+background-color: #222;
+}
+body.dark-mode #sidebar button:hover {
+background-color: #4CAF50;
+}
+body.dark-mode h1, body.dark-mode h2 {
+color: #fff;
+}
+  body.dark-mode .reviews {
+  background-color: #2a2a2a;
+  color: #eee;
+  }
+body {
+  background-image: url("https://raw.githubusercontent.com/AshmitPatil94/Background/refs/heads/main/luke-chesser-3rWagdKBF7U-unsplash.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+#eco, #art, #organic {
+  color: white;
+}
+
+#eco h1, #art h1, #organic h1,
+#eco p, #art p, #organic p {
+  color: white;
+}
+</style>
+
+</head>
+<body>
+<button id="sidebarToggle" onclick="toggleSidebar()">☰ <span data-lang-key="menu">Menu</span></button>
+
+<div id="sidebar">
+  <button onclick="showSection('categories')"><span data-lang-key="home_icon">🏠 Home</span></button>
+  <button onclick="alert('Account Section')"><span data-lang-key="account_icon">👤 Account</span></button>
+  <button onclick="toggleSettings()">⚙️ <span data-lang-key="settings">Settings</span></button>
+  <div id="settingsPanel" style="display:none; background:#222; margin:10px; padding:10px; border-radius:8px;">
+    <label style="font-size:14px; display:block; margin-bottom: 10px; color: white;">
+        <span data-lang-key="language">Language:</span>
+        <select id="languageSelect" onchange="changeLanguage(this.value)" style="margin-left: 5px; padding: 5px; border-radius: 5px; color: black;">
+            <option value="en">English</option>
+            <option value="hi">Hindi (हिंदी)</option>
+            <option value="mr">Marathi (मराठी)</option>
+        </select>
+    </label>
+    <label style="font-size:14px;">
+      <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()"> <span data-lang-key="dark_mode">Dark Mode</span>
+    </label>
+  </div>
+  <button onclick="showSection('versionInfo')">ℹ️ <span data-lang-key="version_icon">Version</span></button>
+  <button onclick="alert(translations[currentLang].alert_logged_out)">🚪 <span data-lang-key="logout_icon">Logout</span></button>
+
+</div>
+<div id="mainContent">
+  <div id="preLoginModal">
+    <div id="modalContent">
+      <h2 data-lang-key="welcome_title">Welcome to LocalHub</h2>
+      <div id="loginForm">
+        <p>Please login or signup to continue.</p>
+        <input type="email" id="loginEmail" placeholder="Email"><br>
+        <input type="password" id="loginPassword" placeholder="Password"><br>
+        <button onclick="login()">Login</button>
+        <button onclick="showSignup()">Sign Up</button>
+        <p>or</p>
+        <button onclick="skipLogin()">Skip</button>
+      </div>
+      <div id="signupForm" style="display:none;">
+        <h3 data-lang-key="signup_title">Sign Up</h3>
+        <input type="email" id="signupEmail" placeholder="Email"><br>
+        <input type="password" id="signupPassword" placeholder="Password"><br>
+        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password"><br>
+        <button onclick="signup()" data-lang-key="ok_btn">OK</button>
+        <p style="margin-top:10px;"><button onclick="backToLogin()" data-lang-key="back_to_login">Back to Login</button></p>
+      </div>
+
+    </div>
+  </div>
+  <div id="categories">
+    <h1 data-lang-key="app_name">LocalHub</h1>
+    <input type="text" id="searchBar" data-lang-key="search_placeholder" placeholder="Search products..." onkeyup="searchProducts()"><br>
+    <div class="product-grid" id="searchResults"></div>
+    <button class="mainBtn" onclick="showSection('handicrafts')" data-lang-key="handicrafts_btn">Handicrafts</button>
+    <button class="mainBtn" onclick="showSection('textiles')" data-lang-key="textiles_btn">Textiles</button>
+    <button class="mainBtn" onclick="showSection('more')" data-lang-key="more_categories_btn">More Categories</button>
+  </div>
+  <div id="handicrafts" class="section">
+    <h1 data-lang-key="handicrafts_title">Handicrafts</h1>
+    <div class="product-grid">
+      <div class="product-card" onclick="showProductDetail('pottery')">
+        <img src="https://raw.githubusercontent.com/AshmitPatil94/Image/refs/heads/main/pottery.jpg" alt="Handmade Pottery">
+        <div class="product-name" data-lang-product-key="pottery_name">Terracotta Handmade Pottery</div>
+        <div class="product-price">&#8377;499</div>
+      </div>
+      <div class="product-card" onclick="showProductDetail('vase')">
+        <img src="https://raw.githubusercontent.com/AshmitPatil94/Vase/refs/heads/main/vase.jpg" alt="Clay Vase">
+        <div class="product-name" data-lang-product-key="vase_name">Clay Decorative Vase</div>
+        <div class="product-price">&#8377;699</div>
+      </div>
+    </div>
+    <button class="back-button" onclick="showSection('categories')" data-lang-key="back_to_home">Back to Home</button>
+  </div>
+  <div id="textiles" class="section">
+    <h1 data-lang-key="textiles_title">Textiles</h1>
+    <div class="product-grid">
+      <div class="product-card" onclick="showProductDetail('shawl')">
+        <img src="https://raw.githubusercontent.com/AshmitPatil94/Woolen-Shawl/refs/heads/main/woolenshawl.jpg" alt="Handmade Shawl">
+        <div class="product-name" data-lang-product-key="shawl_name">Handmade Woolen Shawl</div>
+        <div class="product-price">&#8377;999</div>
+      </div>
+      <div class="product-card" onclick="showProductDetail('kurta')">
+        <img src="https://raw.githubusercontent.com/AshmitPatil94/Cottenkurta/refs/heads/main/cottenprintedkurta.jpg" alt="Cotton Kurta">
+        <div class="product-name" data-lang-product-key="kurta_name">Cotton Printed Kurta</div>
+        <div class="product-price">&#8377;699</div>
+      </div>
+    </div>
+    <button class="back-button" onclick="showSection('categories')" data-lang-key="back_to_home">Back to Home</button>
+  </div>
+  <div id="product-detail" class="section product-detail">
+    <h1 id="detail-name">Product Name</h1>
+    <img id="detail-img" src="" alt="Product Image" onerror="this.src='https://via.placeholder.com/300?text=Image+Unavailable';">
+    <p id="detail-price"><strong data-lang-key="price_label">Price:</strong> &#8377;0</p>
+    <p id="detail-description"><strong data-lang-key="description_label">Description:</strong> Lorem ipsum dolor sit amet.</p>
+    <p id="detail-provider"><strong data-lang-key="provider_label">Provider:</strong> Local Artisan</p>
+    <div class="stars"><div class="stars-inner" id="detail-rating"></div></div>
+    <div class="reviews">
+      <h3 data-lang-key="reviews_title">Reviews:</h3>
+      <p id="detail-reviews">- Amazing craftsmanship! <br> - Loved the quality. <br> - Highly recommend.</p>
+    </div>
+    <button class="back-button" onclick="goBack()" data-lang-key="back_btn">Back</button>
+  </div>
+  <div id="more" class="section">
+    <h1 data-lang-key="more_categories_title">More Categories</h1>
+    <div class="category-buttons">
+      <button class="mainBtn" onclick="showSection('eco')" data-lang-key="eco_btn">Eco-friendly Products</button>
+      <button class="mainBtn" onclick="showSection('art')" data-lang-key="art_btn">Paintings & Wall Art</button>
+      <button class="mainBtn" onclick="showSection('organic')" data-lang-key="organic_btn">Organic Produce</button>
+    </div>
+    <button class="back-button" onclick="showSection('categories')" data-lang-key="back_to_home">Back to Home</button>
+  </div>
+  <div id="eco" class="section"><h1 data-lang-key="eco_title">Eco-friendly Products</h1><p data-lang-key="eco_desc">Reusable items made locally.</p><button class="back-button" onclick="showSection('more')" data-lang-key="back_btn">Back</button></div>
+  <div id="art" class="section"><h1 data-lang-key="art_title">Paintings & Wall Art</h1><p data-lang-key="art_desc">Traditional Indian art.</p><button class="back-button" onclick="showSection('more')" data-lang-key="back_btn">Back</button></div>
+  <div id="organic" class="section"><h1 data-lang-key="organic_title">Organic Produce</h1><p data-lang-key="organic_desc">Fresh chemical-free produce.</p><button class="back-button" onclick="showSection('more')" data-lang-key="back_btn">Back</button></div>
+
+  <div id="versionInfo" class="section">
+    <h1 data-lang-key="version_info_title">LocalHub Version Info</h1>
+    <h2 data-lang-key="version_number">Version 1.1</h2>
+    <p data-lang-key="last_updated" style="color: #ffffff;">Last Updated: October 2025</p>
+    <hr style="width:50%; margin: 20px auto; border-color:#ccc;">
+    <h3 data-lang-key="credits_title" style="color: white;">Credits:</h3>
+    <ul style="list-style-type:none; padding:0; line-height:1.8; max-width: 300px; margin: 0 auto;">
+      <li><b>Ashmit Patil</b></li>
+      <li><b>Advay Zalke</b></li>
+      <li><b>Shreekunj Yewle</b></li>
+      <li><b>Arnav Sakure</b></li>
+    </ul>
+    <button class="back-button" onclick="showSection('categories')" data-lang-key="back_to_home">Back to Home</button>
+  </div>
+
+</div> 
+<script>
+// =========================================================================
+// ADDED LANGUAGE MANAGEMENT CODE
+// =========================================================================
+
+const translations = {
+    en: {
+        menu: "Menu", home_icon: "🏠 Home", account_icon: "👤 Account", settings: "Settings", dark_mode: "Dark Mode", language: "Language:", version_icon: "ℹ️ Version", logout_icon: "🚪 Logout",
+        welcome_title: "Welcome to LocalHub", login_prompt: "Please login or signup to continue.", login_btn: "Login", signup_btn: "Sign Up", or: "or", skip_btn: "Skip",
+        signup_title: "Sign Up", ok_btn: "OK", back_to_login: "Back to Login",
+        app_name: "LocalHub", search_placeholder: "Search products...",
+        handicrafts_btn: "Handicrafts", textiles_btn: "Textiles", more_categories_btn: "More Categories",
+        handicrafts_title: "Handicrafts", textiles_title: "Textiles", more_categories_title: "More Categories",
+        eco_btn: "Eco-friendly Products", art_btn: "Paintings & Wall Art", organic_btn: "Organic Produce",
+        eco_title: "Eco-friendly Products", eco_desc: "Reusable items made locally.",
+        art_title: "Paintings & Wall Art", art_desc: "Traditional Indian art.",
+        organic_title: "Organic Produce", organic_desc: "Fresh chemical-free produce.",
+        back_to_home: "Back to Home", back_btn: "Back",
+        price_label: "Price:", description_label: "Description:", provider_label: "Provider:", reviews_title: "Reviews:",
+        version_info_title: "LocalHub Version Info", version_number: "Version 1.1", last_updated: "Last Updated: October 2025", credits_title: "Credits:",
+        // Product Names (for cards)
+        pottery_name: "Terracotta Handmade Pottery", vase_name: "Clay Decorative Vase", shawl_name: "Handmade Woolen Shawl", kurta_name: "Cotton Printed Kurta",
+        // Product Details (Descriptions and reviews are updated via JS function and products object)
+        pottery_desc: "Beautiful handmade terracotta pottery.", pottery_provider: "Ramesh Pottery", pottery_reviews: "- Amazing craftsmanship!<br>- Loved it.",
+        vase_desc: "Elegant clay vase.", vase_provider: "Priya Clay Works", vase_reviews: "- Beautiful design!<br>- Sturdy.",
+        shawl_desc: "Warm woolen shawl, handcrafted.", shawl_provider: "Anita Textiles", shawl_reviews: "- Super soft!<br>- Beautiful colors.",
+        kurta_desc: "Comfortable cotton kurta with traditional prints.", kurta_provider: "Ravi Textiles", kurta_reviews: "- Light and airy.<br>- Excellent prints.",
+        
+        // Alerts
+        alert_enter_fields: "Enter all fields", alert_passwords_mismatch: "Passwords do not match", alert_email_exists: "Email already exists", alert_invalid_login: "Invalid email or password",
+        alert_logged_out: "Logged Out"
+    },
+    // REVISED CASUAL HINDI
+    hi: {
+        menu: "मेन्यू", home_icon: "🏠 होम", account_icon: "👤 अकाउंट", settings: "सेटिंग्स", dark_mode: "डार्क मोड", language: "भाषा:", version_icon: "वर्जन", logout_icon: "🚪 लॉग आउट",
+        welcome_title: "लोकलहब में आपका स्वागत है", login_prompt: "आगे बढ़ने के लिए लॉगिन या साइन अप करें।", login_btn: "लॉगिन", signup_btn: "साइन अप", or: "या", skip_btn: "स्किप करें",
+        signup_title: "साइन अप", ok_btn: "ओके", back_to_login: "लॉगिन पर वापस",
+        app_name: "लोकलहब", search_placeholder: "सामान खोजें...",
+        handicrafts_btn: "हस्तकला", textiles_btn: "कपड़े", more_categories_btn: "और श्रेणियाँ",
+        handicrafts_title: "हस्तकला (Handicrafts)", textiles_title: "कपड़े (Textiles)", more_categories_title: "और श्रेणियाँ",
+        eco_btn: "इको-फ्रेंडली प्रोडक्ट्स", art_btn: "पेंटिंग और आर्ट", organic_btn: "ऑर्गनिक सामान",
+        eco_title: "इको-फ्रेंडली प्रोडक्ट्स", eco_desc: "स्थानीय रूप से बने री-यूजेबल आइटम्स।",
+        art_title: "पेंटिंग और आर्ट", art_desc: "पारंपरिक भारतीय कला।",
+        organic_title: "ऑर्गनिक सामान", organic_desc: "ताजा, केमिकल-फ्री उत्पाद।",
+        back_to_home: "होम पर वापस", back_btn: "पीछे",
+        price_label: "क़ीमत:", description_label: "विवरण:", provider_label: "विक्रेता:", reviews_title: "रिव्यू:",
+        version_info_title: "लोकलहब वर्जन इन्फो", version_number: "वर्जन 1.1", last_updated: "लास्ट अपडेट: अक्टूबर 2025", credits_title: "क्रेडिट्स:",
+        // Product Names (for cards)
+        pottery_name: "टेराकोटा मिट्टी के बर्तन", vase_name: "मिट्टी का सजावटी वास", shawl_name: "हाथ की बनी ऊनी शॉल", kurta_name: "कॉटन प्रिंटेड कुर्ता",
+        // Product Details (Descriptions and reviews are updated via JS function and products object)
+        pottery_desc: "सुंदर हाथ से बनी टेराकोटा पॉटरी।", pottery_provider: "रमेश पॉटरी", pottery_reviews: "- कारीगरी बहुत अच्छी है!<br>- मुझे बहुत पसंद आया।",
+        vase_desc: "एलिगेंट मिट्टी का फूलदान।", vase_provider: "प्रिया क्ले वर्क्स", vase_reviews: "- सुंदर डिज़ाइन!<br>- मजबूत है।",
+        shawl_desc: "गर्म ऊनी शॉल, हाथ से बुनी हुई।", shawl_provider: "अनिता टेक्सटाइल्स", shawl_reviews: "- बहुत सॉफ्ट है!<br>- रंग सुंदर हैं।",
+        kurta_desc: "ट्रेडिशनल प्रिंट वाला आरामदायक कॉटन कुर्ता।", kurta_provider: "रवि टेक्सटाइल्स", kurta_reviews: "- हल्का और हवादार है।<br>- प्रिंट्स बढ़िया हैं।",
+
+        // Alerts
+        alert_enter_fields: "सारे फील्ड भरें", alert_passwords_mismatch: "पासवर्ड मैच नहीं हो रहे हैं", alert_email_exists: "यह ईमेल पहले से मौजूद है", alert_invalid_login: "गलत ईमेल या पासवर्ड",
+        alert_logged_out: "लॉग आउट हो गए"
+    },
+    // NEW MARATHI TRANSLATIONS
+    mr: {
+        menu: "मेनू", home_icon: "🏠 होम", account_icon: "👤 खाते", settings: "सेटिंग्स", dark_mode: "डार्क मोड", language: "भाषा:", version_icon: "आवृत्ती", logout_icon: "🚪 लॉगआउट",
+        welcome_title: "लोकलहब मध्ये आपले स्वागत आहे", login_prompt: "पुढे जाण्यासाठी कृपया लॉग इन करा किंवा साइन अप करा.", login_btn: "लॉग इन करा", signup_btn: "साइन अप करा", or: "किंवा", skip_btn: "वगळा",
+        signup_title: "साइन अप", ok_btn: "ओके", back_to_login: "लॉग इनवर परत",
+        app_name: "लोकलहब", search_placeholder: "उत्पादने शोधा...",
+        handicrafts_btn: "हस्तकला", textiles_btn: "वस्त्र", more_categories_btn: "आणखी प्रकार",
+        handicrafts_title: "हस्तकला", textiles_title: "वस्त्र", more_categories_title: "आणखी प्रकार",
+        eco_btn: "पर्यावरणास अनुकूल उत्पादने", art_btn: "चित्रे आणि वॉल आर्ट", organic_btn: "सेंद्रिय उत्पादने",
+        eco_title: "पर्यावरणास अनुकूल उत्पादने", eco_desc: "स्थानिक पातळीवर बनवलेल्या पुन्हा वापरण्यायोग्य वस्तू.",
+        art_title: "चित्रे आणि वॉल आर्ट", art_desc: "पारंपारिक भारतीय कला.",
+        organic_title: "सेंद्रिय उत्पादने", organic_desc: "ताजी, रासायनिक मुक्त उत्पादने.",
+        back_to_home: "होमवर परत", back_btn: "मागे",
+        price_label: "किंमत:", description_label: "वर्णन:", provider_label: "विक्रेता:", reviews_title: "पुनरावलोकने:",
+        version_info_title: "लोकलहब आवृत्ती माहिती", version_number: "आवृत्ती 1.1", last_updated: "शेवटचे अद्यतन: ऑक्टोबर २०२५", credits_title: "श्रेय:",
+        // Product Names (for cards)
+        pottery_name: "टेराकोटा हस्तनिर्मित मातीची भांडी", vase_name: "मातीचा सजावटीचा फुलदाणी", shawl_name: "हाताने विणलेली लोकर शाल", kurta_name: "कॉटन प्रिंटेड कुर्ता",
+        // Product Details (Descriptions and reviews are updated via JS function and products object)
+        pottery_desc: "सुंदर हस्तनिर्मित टेराकोटा मातीची भांडी.", pottery_provider: "रमेश पॉटरी", pottery_reviews: "- अप्रतिम कारागिरी!<br>- खूप आवडले.",
+        vase_desc: "मोहक मातीचा फुलदाणी.", vase_provider: "प्रिया क्ले वर्क्स", vase_reviews: "- सुंदर डिझाइन!<br>- मजबूत.",
+        shawl_desc: "उबदार लोकरी शाल, हाताने बनवलेली.", shawl_provider: "अनिता टेक्सटाइल्स", shawl_reviews: "- खूप मऊ!<br>- सुंदर रंग.",
+        kurta_desc: "पारंपारिक प्रिंट्ससह आरामदायक कॉटन कुर्ता.", kurta_provider: "रवि टेक्सटाइल्स", kurta_reviews: "- हलका आणि हवेशीर.<br>- उत्कृष्ट प्रिंट्स.",
+
+        // Alerts
+        alert_enter_fields: "सर्व फील्ड भरा", alert_passwords_mismatch: "पासवर्ड जुळत नाहीत", alert_email_exists: "ईमेल आधीच अस्तित्वात आहे", alert_invalid_login: "अवैध ईमेल किंवा पासवर्ड",
+        alert_logged_out: "लॉगआउट झाले"
+    }
+};
+
+let currentLang = localStorage.getItem('currentLang') || 'en';
+
+// Function to update all text based on the selected language
+function updateContent(lang) {
+    const texts = translations[lang];
+    if (!texts) return;
+
+    // Update elements with data-lang-key attribute
+    document.querySelectorAll('[data-lang-key]').forEach(el => {
+        const key = el.getAttribute('data-lang-key');
+        if (texts[key]) {
+            // Special handling for elements containing icons or special formatting
+            if (el.tagName === 'BUTTON' || el.tagName === 'SPAN' || el.tagName === 'STRONG') {
+                // If it contains an icon (like 🏠), preserve the icon and update the text part
+                const iconMatch = el.innerHTML.match(/[\uD800-\uDBFF\uDC00-\uDFFF\u2600-\u26FF\u2700-\u27BF]*/);
+                const icon = iconMatch ? iconMatch[0] : '';
+                el.innerHTML = icon + (icon ? ' ' : '') + texts[key].replace(/[\uD800-\uDBFF\uDC00-\uDFFF\u2600-\u26FF\u2700-\u27BF]*/, '').trim();
+            } else {
+                el.innerText = texts[key];
+            }
+        }
+    });
+
+    // Update placeholders
+    document.getElementById('searchBar').placeholder = texts.search_placeholder;
+    
+    // Update dynamic product details if the product detail view is open
+    const currentSection = document.querySelector('.section[style*="block"], #categories[style*="block"]');
+    if (currentSection && currentSection.id === 'product-detail') {
+        // Re-call showProductDetail with the current product ID to refresh the text
+        const currentProductId = document.getElementById('product-detail').dataset.productId;
+        if (currentProductId) {
+            showProductDetail(currentProductId);
+        }
+    }
+    
+    // Update product card names visible in the categories (handicrafts/textiles)
+    document.querySelectorAll('[data-lang-product-key]').forEach(el => {
+        const key = el.getAttribute('data-lang-product-key');
+        if (texts[key]) {
+            el.innerText = texts[key];
+        }
+    });
+}
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('currentLang', lang);
+    updateContent(lang);
+    
+    let alertMessage = '';
+    if (lang === 'hi') {
+        alertMessage = 'भाषा बदलकर हिंदी कर दी गई है।';
+    } else if (lang === 'mr') {
+        alertMessage = 'भाषा मराठीमध्ये बदलली आहे.';
+    } else {
+        alertMessage = 'Language changed to English.';
+    }
+    alert(alertMessage);
+}
+
+// =========================================================================
+// MODIFIED EXISTING JAVASCRIPT
+// =========================================================================
+
+let lastSection = 'categories';
+
+// Load users from localStorage or initialize
+let users = JSON.parse(localStorage.getItem('users')) || [];
+
+// The product object remains in English for the core data, but we'll use translations for display
+const products = {
+  pottery: {id:'pottery', name:"Terracotta Handmade Pottery", img:"https://raw.githubusercontent.com/AshmitPatil94/Image/refs/heads/main/pottery.jpg", price:"₹499", descriptionKey:"pottery_desc", providerKey:"pottery_provider", reviewsKey:"pottery_reviews", rating:4.5},
+  vase: {id:'vase', name:"Clay Decorative Vase", img:"https://raw.githubusercontent.com/AshmitPatil94/Vase/refs/heads/main/vase.jpg", price:"₹699", descriptionKey:"vase_desc", providerKey:"vase_provider", reviewsKey:"vase_reviews", rating:4},
+  shawl: {id:'shawl', name:"Handmade Woolen Shawl", img:"https://raw.githubusercontent.com/AshmitPatil94/Woolen-Shawl/refs/heads/main/woolenshawl.jpg", price:"₹999", descriptionKey:"shawl_desc", providerKey:"shawl_provider", reviewsKey:"shawl_reviews", rating:4.8},
+  kurta: {id:'kurta', name:"Cotton Printed Kurta", img:"https://raw.githubusercontent.com/AshmitPatil94/Cottenkurta/refs/heads/main/cottenprintedkurta.jpg", price:"₹699", descriptionKey:"kurta_desc", providerKey:"kurta_provider", reviewsKey:"kurta_reviews", rating:4.2}
+};
+
+function showSection(sectionId){
+  document.querySelectorAll('.section, #categories').forEach(el=>el.style.display='none');
+  document.getElementById(sectionId).style.display='block';
+  lastSection = sectionId;
+}
+
+function showProductDetail(id){
+  const p=products[id];
+  const t = translations[currentLang]; // Get current translations
+  
+  document.getElementById('product-detail').dataset.productId = id; // Store current product ID
+  
+  // Update with translated text from keys
+  document.getElementById('detail-name').innerText = t[`${id}_name`] || p.name;
+  document.getElementById('detail-img').src=p.img;
+  // Note: We use the strong tag's inner content to hold the price/desc/provider label
+  document.getElementById('detail-price').innerHTML=`<strong data-lang-key="price_label">${t.price_label || 'Price'}:</strong> ${p.price}`;
+  document.getElementById('detail-description').innerHTML=`<strong data-lang-key="description_label">${t.description_label || 'Description'}:</strong> ${t[p.descriptionKey] || p.description}`;
+  document.getElementById('detail-provider').innerHTML=`<strong data-lang-key="provider_label">${t.provider_label || 'Provider'}:</strong> ${t[p.providerKey] || p.provider}`;
+  document.getElementById('detail-reviews').innerHTML=t[p.reviewsKey] || p.reviews; // Reviews are now fetched from translations
+  document.getElementById('detail-rating').style.width=(p.rating/5*100)+"%";
+  
+  showSection('product-detail');
+}
+
+function goBack(){
+  const currentSection = document.querySelector('.section[style*="block"], #categories[style*="block"]').id;
+  if(currentSection === 'product-detail') {
+    const nonDetailSections = ['categories', 'handicrafts', 'textiles', 'more', 'eco', 'art', 'organic', 'versionInfo'];
+    const previousSection = nonDetailSections.includes(lastSection) ? lastSection : 'categories';
+    showSection(previousSection);
+  }
+  else if(lastSection === 'versionInfo' || lastSection === 'eco' || lastSection === 'art' || lastSection === 'organic'){
+    showSection('categories');
+  }
+  else {
+    showSection(lastSection);
+  }
+}
+
+// Pre-login modal
+function skipLogin(){document.getElementById('preLoginModal').style.display='none';showSection('categories');}
+function showSignup(){document.getElementById('loginForm').style.display='none';document.getElementById('signupForm').style.display='block';}
+function backToLogin(){document.getElementById('signupForm').style.display='none';document.getElementById('loginForm').style.display='block';}
+
+// ✅ Login with localStorage users
+function login(){
+  const e=document.getElementById('loginEmail').value.trim();
+  const p=document.getElementById('loginPassword').value.trim();
+  if(!e||!p){alert("Enter both fields");return;}
+  const user = users.find(u => u.email === e && u.password === p);
+  if(user){
+    alert(`Logged in as ${e}`);
+    document.getElementById('preLoginModal').style.display='none';
+    showSection('categories');
+  } else {
+    alert("Invalid email or password");
+  }
+}
+// ✅ Signup and save to localStorage (Updated for translated alerts)
+function signup(){
+  const t = translations[currentLang];
+  const e=document.getElementById('signupEmail').value.trim(),
+        p=document.getElementById('signupPassword').value.trim(),
+        cp=document.getElementById('signupConfirmPassword').value.trim();
+  if(!e||!p||!cp){alert(t.alert_enter_fields || "Enter all fields");return;}
+  if(p!==cp){alert(t.alert_passwords_mismatch || "Passwords do not match");return;}
+  if(users.find(u => u.email === e)){alert(t.alert_email_exists || "Email already exists"); return;}
+  users.push({email:e,password:p});
+  localStorage.setItem('users', JSON.stringify(users));
+  alert(`Signed up as ${e}`);
+  document.getElementById('preLoginModal').style.display='none';
+  showSection('categories');
+}
+
+// Search (Updated to use translated names for searching and display)
+function searchProducts(){
+  const q=document.getElementById('searchBar').value.toLowerCase();
+  const res=document.getElementById('searchResults');res.innerHTML='';
+  if(q===''){
+    res.style.display = 'none';
+    return;
+  }
+  res.style.display = 'flex';
+  const t = translations[currentLang];
+  
+  Object.keys(products).forEach(id=>{
+    const p=products[id];
+    // Use translated name for display and searching
+    const productName = t[`${id}_name`] || p.name;
+    
+    if(productName.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)){
+      const c=document.createElement('div');
+      c.className='product-card';
+      c.onclick=()=>showProductDetail(id);
+      // Use translated name for the product card
+      c.innerHTML=`<img src="${p.img}" alt="${productName}"><div class="product-name">${productName}</div><div class="product-price">${p.price}</div>`;
+      res.appendChild(c);
+    }
+  });
+}
+
+
+// Sidebar toggle
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('active');}
+
+// ===== 🌙 Added Dark Mode Functions =====
+function toggleSettings(){
+  const panel=document.getElementById('settingsPanel');
+  panel.style.display = panel.style.display==='block' ? 'none' : 'block';
+}
+function toggleDarkMode(){
+  document.body.classList.toggle('dark-mode');
+  const isDark=document.body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode',isDark);
+}
+window.onload=function(){
+  // Load Dark Mode setting
+  const savedDark=localStorage.getItem('darkMode');
+  if(savedDark==='true'){
+    document.body.classList.add('dark-mode');
+    document.getElementById('darkModeToggle').checked=true;
+  }
+  
+  // Load Language setting and update content
+  const savedLang = localStorage.getItem('currentLang') || 'en';
+  document.getElementById('languageSelect').value = savedLang;
+  updateContent(savedLang);
+
+};
+
+// Initial display is handled by window.onload (which calls updateContent and keeps showSection('categories'))
+// showSection('categories'); // Removed redundant call
+</script>
+<script>
+// ========================================
+// LOGIN, SIGNUP, AND SKIP FUNCTIONALITY
+// ========================================
+
+// Already declared above:
+let users = JSON.parse(localStorage.getItem('users')) || [];
+let currentUser = localStorage.getItem('currentUser') || null;
+
+// Hide pre-login modal once user is logged in or skipped
+function hidePreLoginModal() {
+  document.getElementById('preLoginModal').style.display = 'none';
+}
+
+// Show pre-login modal again (e.g., after logout)
+function showPreLoginModal() {
+  document.getElementById('preLoginModal').style.display = 'block';
+}
+
+// ---------------- LOGIN ----------------
+function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+
+  const t = translations[currentLang];
+  
+  if (!email || !password) {
+    alert(t.alert_enter_fields);
+    return;
+  }
+
+  const user = users.find(u => u.email === email && u.password === password);
+  if (user) {
+    currentUser = email;
+    localStorage.setItem('currentUser', email);
+    hidePreLoginModal();
+  } else {
+    alert(t.alert_invalid_login);
+  }
+}
+
+// ---------------- SIGNUP ----------------
+function showSignup() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+}
+
+function backToLogin() {
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+function signup() {
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value.trim();
+  const confirmPassword = document.getElementById('signupConfirmPassword').value.trim();
+
+  const t = translations[currentLang];
+  
+  if (!email || !password || !confirmPassword) {
+    alert(t.alert_enter_fields);
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    alert(t.alert_passwords_mismatch);
+    return;
+  }
+
+  const userExists = users.some(u => u.email === email);
+  if (userExists) {
+    alert(t.alert_email_exists);
+    return;
+  }
+
+  users.push({ email, password });
+  localStorage.setItem('users', JSON.stringify(users));
+  alert(t.signup_btn + " Successful!");
+  backToLogin();
+}
+
+// ---------------- SKIP LOGIN ----------------
+function skipLogin() {
+  hidePreLoginModal();
+}
+
+// ---------------- LOGOUT ----------------
+function logout() {
+  const t = translations[currentLang];
+  localStorage.removeItem('currentUser');
+  currentUser = null;
+  alert(t.alert_logged_out);
+  showPreLoginModal();
+}
+
+// Auto-hide login modal if user is already logged in or skipped before
+window.onload = function() {
+  updateContent(currentLang);
+  if (localStorage.getItem('currentUser')) {
+    hidePreLoginModal();
+  }
+};
+
+// Sidebar + settings toggles (keep working)
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('active');
+}
+function toggleSettings() {
+  const panel = document.getElementById('settingsPanel');
+  panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+}
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  const darkEnabled = document.body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode', darkEnabled);
+}
+
+// Keep dark mode on reload
+if (localStorage.getItem('darkMode') === 'true') {
+  document.body.classList.add('dark-mode');
+}
+</script>
+</body>
+</html>
